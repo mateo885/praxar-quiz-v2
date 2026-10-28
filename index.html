@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Praxar Simulation Finder</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Poppins', system-ui, sans-serif;
+    background: #f0f2f8;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem 3rem;
+  }
+
+  /* Praxar brand tokens */
+  :root {
+    --navy:   #1a2238;
+    --navy2:  #232e48;
+    --red:    #e8344e;
+    --red-dk: #c4273f;
+    --teal:   #1fbfb8;
+    --white:  #ffffff;
+    --off:    #f6f7fb;
+    --border: #e3e6ef;
+    --text:   #1a2238;
+    --muted:  #6b7490;
+    --radius: 12px;
+    --pill:   50px;
+  }
+
+  #qwrap {
+    width: 100%;
+    max-width: 620px;
+    background: var(--off);
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 24px rgba(26,34,56,.1);
+  }
+
+  /* Header */
+  .ph {
+    background: var(--navy);
+    padding: 1.125rem 1.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .plm {
+    width: 32px; height: 32px;
+    background: var(--red);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .pht { flex: 1; }
+  .phtitle { font-size: 14px; font-weight: 700; color: #fff; letter-spacing: .01em; }
+  .phsub { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 1px; }
+  .psp {
+    font-size: 11px; font-weight: 600;
+    background: rgba(255,255,255,.1); color: rgba(255,255,255,.65);
+    padding: 3px 10px; border-radius: var(--pill); letter-spacing: .04em;
+  }
+
+  /* Progress */
+  .ppt { height: 4px; background: rgba(26,34,56,.08); }
+  .ppf { height: 100%; background: var(--red); transition: width .4s ease; }
+
+  /* Body */
+  .pb { padding: 1.5rem 1.5rem 1.25rem; }
+
+  /* Intro */
+  .pi { text-align: center; padding: .5rem 0 .25rem; }
+  .pib {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--red); background: rgba(232,52,78,.08);
+    padding: 4px 12px; border-radius: var(--pill); margin-bottom: 1rem;
+  }
+  .pit { font-size: 20px; font-weight: 700; color: var(--navy); line-height: 1.3; margin-bottom: .625rem; }
+  .pis { font-size: 13.5px; color: var(--muted); line-height: 1.65; max-width: 440px; margin: 0 auto 1.375rem; }
+  .psc { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin-bottom: 1.625rem; }
+  .pch {
+    font-size: 12px; font-weight: 500;
+    background: var(--white); border: 1px solid var(--border);
+    color: var(--navy2); padding: 4px 13px; border-radius: var(--pill);
+  }
+  .bst {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--red); color: #fff;
+    font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600;
+    border: none; border-radius: var(--pill);
+    padding: .75rem 1.875rem; cursor: pointer; transition: background .15s;
+  }
+  .bst:hover { background: var(--red-dk); }
+
+  /* Question */
+  .pql { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--red); margin-bottom: .5rem; }
+  .pqt { font-size: 16px; font-weight: 600; color: var(--navy); line-height: 1.45; margin-bottom: 1.125rem; }
+  .pos { display: flex; flex-direction: column; gap: 9px; }
+  .po {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--white); border: 1.5px solid var(--border);
+    border-radius: var(--radius); padding: .875rem 1rem;
+    cursor: pointer; transition: border-color .15s, background .15s, box-shadow .15s;
+    text-align: left; font-family: 'Poppins', sans-serif; width: 100%;
+  }
+  .po:hover { border-color: var(--red); background: rgba(232,52,78,.03); }
+  .po.sel { border-color: var(--red); background: rgba(232,52,78,.05); box-shadow: 0 0 0 3px rgba(232,52,78,.12); }
+  .pr {
+    width: 20px; height: 20px; flex-shrink: 0; border-radius: 50%;
+    border: 2px solid var(--border); margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color .15s, background .15s;
+  }
+  .po.sel .pr { border-color: var(--red); background: var(--red); }
+  .po.sel .pr::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #fff; }
+  .pol { display: block; font-size: 14px; font-weight: 600; color: var(--navy); margin-bottom: 2px; }
+  .pos2 { font-size: 12px; color: var(--muted); line-height: 1.45; }
+  .po.sel .pos2 { color: #9b2535; }
+
+  /* Nav */
+  .pnav { display: flex; align-items: center; justify-content: space-between; margin-top: 1.375rem; gap: 10px; }
+  .bbk {
+    font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 500;
+    color: var(--muted); background: none; border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 5px; padding: 0;
+  }
+  .bbk:hover { color: var(--navy); }
+  .bnx {
+    font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600;
+    background: var(--navy); color: #fff; border: none; border-radius: var(--pill);
+    padding: .625rem 1.5rem; cursor: pointer; margin-left: auto;
+    transition: background .15s, opacity .15s;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .bnx:disabled { opacity: .3; cursor: not-allowed; }
+  .bnx:not(:disabled):hover { background: var(--navy2); }
+
+  /* Result hero */
+  .prh {
+    background: var(--navy); border-radius: var(--radius);
+    padding: 1.375rem 1.375rem 1.25rem; margin-bottom: 1rem;
+    border-top: 3px solid var(--red);
+  }
+  .prl { font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--red); margin-bottom: .625rem; display: flex; align-items: center; gap: 6px; }
+  .prn { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 4px; line-height: 1.25; }
+  .prtl { font-size: 13px; color: rgba(255,255,255,.5); margin-bottom: 1.125rem; }
+  .prwy {
+    font-size: 13px; line-height: 1.65; color: rgba(255,255,255,.85);
+    background: rgba(255,255,255,.07); border-left: 3px solid var(--red);
+    border-radius: 0 6px 6px 0; padding: .75rem .875rem; margin-bottom: 1.125rem;
+  }
+  .prtags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.125rem; }
+  .ptag { font-size: 11px; font-weight: 500; background: rgba(255,255,255,.1); color: rgba(255,255,255,.6); padding: 3px 10px; border-radius: var(--pill); }
+  .pra { display: flex; gap: 10px; flex-wrap: wrap; }
+  .bcta {
+    font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600;
+    background: var(--red); color: #fff; border: none; border-radius: var(--pill);
+    padding: .625rem 1.25rem; cursor: pointer;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+    transition: background .15s;
+  }
+  .bcta:hover { background: var(--red-dk); }
+  .bol {
+    font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600;
+    background: rgba(255,255,255,.1); color: rgba(255,255,255,.8);
+    border: 1.5px solid rgba(255,255,255,.2); border-radius: var(--pill);
+    padding: .625rem 1.25rem; cursor: pointer; transition: background .15s;
+  }
+  .bol:hover { background: rgba(255,255,255,.18); }
+
+  /* Alt sims */
+  .pat { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: .75rem; }
+  .pag { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .pac {
+    background: var(--white); border: 1.5px solid var(--border);
+    border-radius: 8px; padding: .875rem 1rem; cursor: pointer;
+    transition: border-color .15s, box-shadow .15s; text-decoration: none; display: block;
+  }
+  .pac:hover { border-color: var(--red); box-shadow: 0 2px 12px rgba(232,52,78,.1); }
+  .pan { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+  .pas { font-size: 11px; color: var(--muted); line-height: 1.4; margin-bottom: 7px; }
+  .pabt { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .pabf { height: 100%; background: var(--teal); border-radius: 2px; }
+  .pap { font-size: 11px; font-weight: 600; color: var(--teal); margin-top: 4px; }
+
+  .brs { text-align: center; margin-top: 1.125rem; }
+  .brst { font-family: 'Poppins', sans-serif; font-size: 12px; color: var(--muted); background: none; border: none; cursor: pointer; text-decoration: underline; }
+  .brst:hover { color: var(--navy); }
+
+  /* SalesIQ trigger placeholder */
+  .salesiq-note {
+    margin-top: .75rem; padding: .625rem .875rem;
+    background: rgba(31,191,184,.08); border: 1px solid rgba(31,191,184,.25);
+    border-radius: 8px; font-size: 12px; color: var(--muted); line-height: 1.5;
+  }
+
+  /* Language toggle */
+  .plang { display: flex; gap: 2px; background: rgba(255,255,255,.1); border-radius: var(--pill); padding: 2px; flex-shrink: 0; }
+  .plang button {
+    font-family: 'Poppins', sans-serif; font-size: 10.5px; font-weight: 600; letter-spacing: .04em;
+    color: rgba(255,255,255,.6); background: none; border: none; border-radius: var(--pill);
+    padding: 3px 8px; cursor: pointer; transition: background .15s, color .15s;
+  }
+  .plang button:hover { color: #fff; }
+  .plang button.on { background: #fff; color: var(--navy); }
+</style>
+
+</head>
+<body>
+<div id="qwrap">
+  <div id="qi"></div>
+</div>
+
+<script>
+/* =========================================================
+   LANGUAGE
+   Priority: ?lang=fr|en in the URL, then <html lang>, then browser.
+   ========================================================= */
+function detectLang() {
+  try {
+    const p = new URLSearchParams(window.location.search).get("lang");
+    if (p && /^(fr|en)/i.test(p)) return p.slice(0, 2).toLowerCase();
+  } catch (e) {}
+  const h = (document.documentElement.lang || "").toLowerCase();
+  if (h.startsWith("fr")) return "fr";
+  const n = (navigator.language || "en").toLowerCase();
+  return n.startsWith("fr") ? "fr" : "en";
+}
+let LANG = detectLang();
+document.documentElement.lang = LANG;
+
+const T = {
+  en: {
+    appTitle: "Simulation Finder",
+    appSub: "Praxar | Find your match",
+    badge: n => `${n}-question quiz`,
+    introTitle: "Which Praxar simulation fits your course?",
+    introSub: "Tell us about your course and we'll match you to the simulation that fits it best.",
+    start: "Start the quiz",
+    qOf: (i, n) => `Question ${i} of ${n}`,
+    back: "Back",
+    next: "Next question",
+    seeResult: "See my result",
+    resTitle: "Your recommendation is ready",
+    resSub: n => `Based on your ${n} answers`,
+    bestMatch: "Best match",
+    learnMore: "Learn more",
+    demo: "Request a demo",
+    others: "Other simulations that fit your profile",
+    match: p => `${p}% match`,
+    retake: "Retake the quiz",
+    siqNote: "<strong>SalesIQ integration:</strong> replace the <code>salesIQTrigger()</code> function call with <code>$zoho.salesiq.chat.start()</code> once the SalesIQ script is loaded on your WordPress page.",
+    siqAlert: s => "SalesIQ trigger fires here. Simulation of interest: " + s + "\n\nReplace this with: $zoho.salesiq.chat.start()",
+    fallbackWhy: n => "Based on your teaching profile, " + n + " offers the strongest alignment with your discipline, student level, and course objectives."
+  },
+  fr: {
+    appTitle: "Trouvez votre simulation",
+    appSub: "Praxar | La simulation qui vous convient",
+    badge: n => `Quiz de ${n} questions`,
+    introTitle: "Quelle simulation Praxar convient \u00e0 votre cours?",
+    introSub: "Parlez-nous de votre cours et nous vous proposerons la simulation qui lui convient le mieux.",
+    start: "Commencer le quiz",
+    qOf: (i, n) => `Question ${i} sur ${n}`,
+    back: "Retour",
+    next: "Question suivante",
+    seeResult: "Voir mon r\u00e9sultat",
+    resTitle: "Votre recommandation est pr\u00eate",
+    resSub: n => `Selon vos ${n} r\u00e9ponses`,
+    bestMatch: "Meilleur choix",
+    learnMore: "En savoir plus",
+    demo: "Demander une d\u00e9mo",
+    others: "Autres simulations adapt\u00e9es \u00e0 votre profil",
+    match: p => `${p} % de compatibilit\u00e9`,
+    retake: "Refaire le quiz",
+    siqNote: "<strong>Int\u00e9gration SalesIQ :</strong> remplacez l\u2019appel \u00e0 la fonction <code>salesIQTrigger()</code> par <code>$zoho.salesiq.chat.start()</code> une fois le script SalesIQ charg\u00e9 sur votre page WordPress.",
+    siqAlert: s => "Le d\u00e9clencheur SalesIQ s\u2019active ici. Simulation d\u2019int\u00e9r\u00eat : " + s + "\n\n\u00c0 remplacer par : $zoho.salesiq.chat.start()",
+    fallbackWhy: n => "Selon votre profil d\u2019enseignement, " + n + " offre le meilleur arrimage avec votre discipline, le niveau de vos \u00e9tudiants et les objectifs de votre cours."
+  }
+};
+const t = () => T[LANG];
+const L = obj => (obj && typeof obj === "object" && (LANG in obj)) ? obj[LANG] : obj;
+
+/* =========================================================
+   SIMULATIONS
+   TODO: confirm French URLs and French product names with Praxar.
+   ========================================================= */
+const S = {
+  marketing: {
+    name: { en: "Praxar | Marketing", fr: "Praxar | Marketing" },
+    short: { en: "Marketing", fr: "Marketing" },
+    tagline: { en: "Lead a marketing department at a video game publisher", fr: "Diriger le service marketing d\u2019un \u00e9diteur de jeux vid\u00e9o" },
+    url: {
+      en: "https://www.praxar.com/corpo/en/our-simulations/interactive-marketing-simulation/",
+      fr: "https://www.praxar.com/corpo/en/our-simulations/interactive-marketing-simulation/" // TODO FR URL
+    },
+    tags: { en: ["Marketing concepts", "Brand strategy", "Campaigns", "Individual or team"],
+            fr: ["Concepts de marketing", "Strat\u00e9gie de marque", "Campagnes", "Individuel ou en \u00e9quipe"] }
+  },
+  business: {
+    name: { en: "Praxar | Business (Kayak+)", fr: "Praxar | Entreprise (Kayak+)" },
+    short: { en: "Business", fr: "Entreprise" },
+    tagline: { en: "Manage a growing SME (kayak manufacturer)", fr: "G\u00e9rer une PME en croissance (fabricant de kayaks)" },
+    url: {
+      en: "https://www.praxar.com/corpo/en/our-simulations/interactive-business-simulation/",
+      fr: "https://www.praxar.com/corpo/en/our-simulations/interactive-business-simulation/" // TODO FR URL
+    },
+    tags: { en: ["All business functions", "Entrepreneurship", "Team play", "Cross-functional"],
+            fr: ["Toutes les fonctions de l\u2019entreprise", "Entrepreneuriat", "Jeu en \u00e9quipe", "Vision transversale"] }
+  },
+  management: {
+    name: { en: "Praxar | Management (Golf)", fr: "Praxar | Gestion (Golf)" },
+    short: { en: "Management", fr: "Gestion" },
+    tagline: { en: "Manage people and resources at a golf course", fr: "G\u00e9rer les personnes et les ressources d\u2019un club de golf" },
+    url: {
+      en: "https://www.praxar.com/corpo/en/our-simulations/interactive-management-simulation/",
+      fr: "https://www.praxar.com/corpo/en/our-simulations/interactive-management-simulation/" // TODO FR URL
+    },
+    tags: { en: ["People management", "Sustainability", "Investment decisions", "ESG"],
+            fr: ["Gestion des personnes", "D\u00e9veloppement durable", "D\u00e9cisions d\u2019investissement", "ESG"] }
+  },
+  accounting_cycle: {
+    name: { en: "Praxar | Accounting Cycle", fr: "Praxar | Cycle comptable" },
+    short: { en: "Accounting Cycle", fr: "Cycle comptable" },
+    tagline: { en: "Intro to accounting (rock climbing internship)", fr: "Introduction \u00e0 la comptabilit\u00e9 (stage dans un centre d\u2019escalade)" },
+    url: {
+      en: "https://www.praxar.com/corpo/en/our-simulations/interactive-accounting-cycle-simulation/",
+      fr: "https://www.praxar.com/corpo/en/our-simulations/interactive-accounting-cycle-simulation/" // TODO FR URL
+    },
+    tags: { en: ["Accounting basics", "Guided", "Individual", "Intro level"],
+            fr: ["Bases de la comptabilit\u00e9", "Guid\u00e9", "Individuel", "Niveau introduction"] }
+  },
+  financial_accounting: {
+    name: { en: "Praxar | Financial Accounting", fr: "Praxar | Comptabilit\u00e9 financi\u00e8re" },
+    short: { en: "Financial Accounting", fr: "Comptabilit\u00e9 financi\u00e8re" },
+    tagline: { en: "Statements, analysis and budgeting", fr: "\u00c9tats financiers, analyse et budg\u00e9tisation" },
+    url: {
+      en: "https://www.praxar.com/corpo/en/our-simulations/immersive-financial-accounting-simulation/",
+      fr: "https://www.praxar.com/corpo/en/our-simulations/immersive-financial-accounting-simulation/" // TODO FR URL
+    },
+    tags: { en: ["Financial statements", "Ratio analysis", "Budgeting", "Intermediate+"],
+            fr: ["\u00c9tats financiers", "Analyse de ratios", "Budg\u00e9tisation", "Interm\u00e9diaire et plus"] }
+  }
+};
+
+/* =========================================================
+   QUESTIONS
+   Q1 and Q2 drive the routing. TODO: replace the "sc" values
+   once Marie-\u00c8ve sends the final routing.
+   ========================================================= */
+const Q = [
+  {
+    id: "discipline",
+    q: { en: "What subject area does your course primarily cover?", fr: "Quelle discipline votre cours couvre-t-il principalement?" },
+    opts: [
+      { l: { en: "Introduction to Business", fr: "Introduction aux affaires" }, s: { en: "Broad overview of all business functions", fr: "Survol de toutes les fonctions de l\u2019entreprise" }, v: "intro_business", sc: { business: 4, management: 2, marketing: 1 } },
+      { l: { en: "Marketing", fr: "Marketing" }, s: { en: "Consumer behavior, strategy, brand management", fr: "Comportement du consommateur, strat\u00e9gie, gestion de marque" }, v: "functional_marketing", sc: { marketing: 5, business: 1 } },
+      { l: { en: "Management / Organizational Behavior", fr: "Gestion / Comportement organisationnel" }, s: { en: "People, teams, leadership, HR, operations", fr: "Personnes, \u00e9quipes, leadership, RH, op\u00e9rations" }, v: "management", sc: { management: 5, business: 2 } },
+      { l: { en: "Accounting (introductory)", fr: "Comptabilit\u00e9 (introduction)" }, s: { en: "Accounting cycle, bookkeeping, debits and credits", fr: "Cycle comptable, tenue de livres, d\u00e9bits et cr\u00e9dits" }, v: "accounting_intro", sc: { accounting_cycle: 5 } },
+      { l: { en: "Accounting (intermediate / financial)", fr: "Comptabilit\u00e9 (interm\u00e9diaire / financi\u00e8re)" }, s: { en: "Statements, ratio analysis, budgeting", fr: "\u00c9tats financiers, analyse de ratios, budg\u00e9tisation" }, v: "financial_accounting", sc: { financial_accounting: 5, accounting_cycle: 1 } },
+      { l: { en: "Entrepreneurship", fr: "Entrepreneuriat" }, s: { en: "Startup creation, business model, growth", fr: "D\u00e9marrage d\u2019entreprise, mod\u00e8le d\u2019affaires, croissance" }, v: "entrepreneurship", sc: { business: 5, management: 2 } }
+    ]
+  },
+  {
+    id: "level",
+    q: { en: "What is the academic level of your students?", fr: "Quel est le niveau d\u2019\u00e9tudes de vos \u00e9tudiants?" },
+    opts: [
+      { l: { en: "College / CEGEP (first year)", fr: "C\u00e9gep (premi\u00e8re ann\u00e9e)" }, s: { en: "Introductory concepts, foundational skills", fr: "Notions d\u2019introduction, comp\u00e9tences de base" }, v: "college_1", sc: { accounting_cycle: 3, business: 2, marketing: 1 } },
+      { l: { en: "College / CEGEP (advanced)", fr: "C\u00e9gep (avanc\u00e9)" }, s: { en: "Second or third year, some prior knowledge", fr: "Deuxi\u00e8me ou troisi\u00e8me ann\u00e9e, certains acquis" }, v: "college_adv", sc: { business: 3, management: 2, marketing: 2 } },
+      { l: { en: "Undergraduate (first or second year)", fr: "Baccalaur\u00e9at (1re ou 2e ann\u00e9e)" }, s: { en: "University, introductory to intermediate", fr: "Universit\u00e9, niveau introduction \u00e0 interm\u00e9diaire" }, v: "undergrad_low", sc: { business: 3, marketing: 2, management: 2, accounting_cycle: 2 } },
+      { l: { en: "Undergraduate (third year or above)", fr: "Baccalaur\u00e9at (3e ann\u00e9e et plus)" }, s: { en: "University, advanced coursework", fr: "Universit\u00e9, cours avanc\u00e9s" }, v: "undergrad_high", sc: { management: 3, marketing: 3, financial_accounting: 3 } },
+      { l: { en: "Graduate / MBA", fr: "Cycles sup\u00e9rieurs / MBA" }, s: { en: "Master's level, strategic thinking", fr: "Ma\u00eetrise, r\u00e9flexion strat\u00e9gique" }, v: "grad", sc: { management: 4, business: 3, marketing: 2, financial_accounting: 2 } }
+    ]
+  },
+  {
+    id: "priority",
+    q: { en: "What outcome matters most for your course?", fr: "Quel objectif est le plus important pour votre cours?" },
+    opts: [
+      { l: { en: "Cross-functional business understanding", fr: "Compr\u00e9hension globale de l\u2019entreprise" }, s: { en: "Seeing how all departments are interdependent", fr: "Voir comment tous les services sont interd\u00e9pendants" }, v: "cross_functional", sc: { business: 5, management: 3 } },
+      { l: { en: "Mastery of a specific discipline", fr: "Ma\u00eetrise d\u2019une discipline pr\u00e9cise" }, s: { en: "Deep focus on one functional area", fr: "Approfondir un seul domaine fonctionnel" }, v: "discipline_mastery", sc: { marketing: 4, accounting_cycle: 4, financial_accounting: 4 } },
+      { l: { en: "Strategic decision-making under pressure", fr: "Prise de d\u00e9cision strat\u00e9gique sous pression" }, s: { en: "Making tough calls with limited info and time", fr: "Trancher avec peu d\u2019information et peu de temps" }, v: "strategy", sc: { management: 4, business: 3, marketing: 2 } },
+      { l: { en: "Sustainability and ethics awareness", fr: "Sensibilisation au d\u00e9veloppement durable et \u00e0 l\u2019\u00e9thique" }, s: { en: "Social, environmental, and governance dimensions", fr: "Dimensions sociales, environnementales et de gouvernance" }, v: "sustainability", sc: { management: 5, business: 2 } },
+      { l: { en: "Student engagement and motivation", fr: "Engagement et motivation des \u00e9tudiants" }, s: { en: "Getting students genuinely excited about the material", fr: "Susciter un r\u00e9el int\u00e9r\u00eat pour la mati\u00e8re" }, v: "engagement", sc: { marketing: 4, business: 4, management: 3 } }
+    ]
+  },
+  {
+    id: "enrollment",
+    q: { en: "On average, how many students are enrolled in this course each semester?", fr: "En moyenne, combien d\u2019\u00e9tudiants sont inscrits \u00e0 ce cours \u00e0 chaque session?" },
+    // TODO: scoring to be set with the final routing (neutral for now)
+    opts: [
+      { l: { en: "0 to 50", fr: "0 \u00e0 50" }, v: "size_0_50", sc: {} },
+      { l: { en: "51 to 100", fr: "51 \u00e0 100" }, v: "size_51_100", sc: {} },
+      { l: { en: "101 to 200", fr: "101 \u00e0 200" }, v: "size_101_200", sc: {} },
+      { l: { en: "201 and more", fr: "201 et plus" }, v: "size_201_plus", sc: {} }
+    ]
+  },
+  {
+    id: "teamwork",
+    q: { en: "Will students work individually or in teams?", fr: "Vos \u00e9tudiants travailleront-ils seuls ou en \u00e9quipe?" },
+    opts: [
+      { l: { en: "Individually", fr: "Individuellement" }, s: { en: "Each student manages their own case", fr: "Chaque \u00e9tudiant g\u00e8re son propre cas" }, v: "solo", sc: { accounting_cycle: 4, financial_accounting: 4, marketing: 2 } },
+      { l: { en: "Teams of 2 to 3", fr: "\u00c9quipes de 2 ou 3" }, s: { en: "Small groups, close collaboration", fr: "Petits groupes, collaboration \u00e9troite" }, v: "small_team", sc: { business: 3, management: 3, marketing: 3 } },
+      { l: { en: "Teams of 4 or more", fr: "\u00c9quipes de 4 ou plus" }, s: { en: "Larger groups, delegated roles", fr: "Groupes plus grands, r\u00f4les r\u00e9partis" }, v: "large_team", sc: { management: 4, business: 3 } },
+      { l: { en: "Both individual and team work", fr: "Travail individuel et en \u00e9quipe" }, s: { en: "Hybrid with shared and personal deliverables", fr: "Formule mixte, livrables individuels et d\u2019\u00e9quipe" }, v: "mixed", sc: { marketing: 3, management: 3, business: 2 } }
+    ]
+  }
+];
+
+const EMPTY_SCORES = () => ({ marketing: 0, business: 0, management: 0, accounting_cycle: 0, financial_accounting: 0 });
+let st = { screen: "intro", step: 0, answers: {}, scores: EMPTY_SCORES() };
+
+function topResult() {
+  return Object.entries(st.scores).sort((a, b) => b[1] - a[1])[0][0];
+}
+function getAlts() {
+  return Object.entries(st.scores).sort((a, b) => b[1] - a[1]).slice(1, 3).map(([k, v]) => ({ k, v }));
+}
+function pct(s, mx) {
+  return mx === 0 ? 0 : Math.round(Math.min(100, (s / mx) * 100));
+}
+
+const WHY = {
+  discipline: {
+    functional_marketing: { en: "Your course focuses on marketing. Students take the role of Marketing Director at a video game publisher, applying brand, product, and campaign strategy in every round.", fr: "Votre cours porte sur le marketing. Les \u00e9tudiants occupent le poste de directeur marketing d\u2019un \u00e9diteur de jeux vid\u00e9o et appliquent des strat\u00e9gies de marque, de produit et de campagne \u00e0 chaque ronde." },
+    intro_business: { en: "Kayak+ is the ideal fit for introduction to business courses. Students manage all functions (finance, HR, marketing, operations) inside one integrated growing company.", fr: "Kayak+ convient parfaitement aux cours d\u2019introduction aux affaires. Les \u00e9tudiants g\u00e8rent toutes les fonctions (finances, RH, marketing, op\u00e9rations) au sein d\u2019une m\u00eame entreprise en croissance." },
+    entrepreneurship: { en: "Widely adopted in entrepreneurship courses, Kayak+ puts students in charge of a manufacturing SME navigating real growth challenges from day one.", fr: "Tr\u00e8s utilis\u00e9e dans les cours d\u2019entrepreneuriat, Kayak+ place les \u00e9tudiants \u00e0 la t\u00eate d\u2019une PME manufacturi\u00e8re qui affronte de vrais d\u00e9fis de croissance d\u00e8s le premier jour." },
+    management: { en: "Golf is purpose-built for management courses. Students supervise virtual managers, evaluate investments, and balance ESG performance across three profit centers.", fr: "Golf est con\u00e7ue pour les cours de gestion. Les \u00e9tudiants supervisent des gestionnaires virtuels, \u00e9valuent des investissements et \u00e9quilibrent leur performance ESG dans trois centres de profit." },
+    accounting_intro: { en: "Designed specifically for intro accounting. Students work through the full accounting cycle inside a guided rock climbing company internship.", fr: "Con\u00e7ue sp\u00e9cialement pour l\u2019introduction \u00e0 la comptabilit\u00e9. Les \u00e9tudiants parcourent tout le cycle comptable dans le cadre d\u2019un stage guid\u00e9 au sein d\u2019un centre d\u2019escalade." },
+    financial_accounting: { en: "Your intermediate accounting focus maps to Financial Accounting. Students work with statements, ratio analysis, and budgeting in a structured and engaging portal.", fr: "Votre cours de comptabilit\u00e9 interm\u00e9diaire correspond \u00e0 Comptabilit\u00e9 financi\u00e8re. Les \u00e9tudiants travaillent avec les \u00e9tats financiers, l\u2019analyse de ratios et la budg\u00e9tisation dans un portail structur\u00e9 et stimulant." }
+  },
+  large_team_mgmt: { en: "Larger teams work naturally here. The golf simulation assigns distinct management roles across departments within each group.", fr: "Les grandes \u00e9quipes s\u2019y pr\u00eatent naturellement. La simulation Golf attribue des r\u00f4les de gestion distincts \u00e0 chaque membre de l\u2019\u00e9quipe." },
+  solo_acct: { en: "Individual completion mode suits these accounting simulations. Each student works through their own transaction set at their own pace.", fr: "Le mode individuel convient \u00e0 ces simulations comptables. Chaque \u00e9tudiant traite ses propres transactions, \u00e0 son rythme." },
+  sustain_mgmt: { en: "Golf uniquely embeds a social and environmental score into every decision. Sustainability is structural, not cosmetic.", fr: "Golf int\u00e8gre un score social et environnemental \u00e0 chaque d\u00e9cision. Le d\u00e9veloppement durable y est structurel, pas cosm\u00e9tique." },
+  cross_biz: { en: "No other simulation covers as many functions at once. Students make linked decisions across HR, marketing, production, and finance every round.", fr: "Aucune autre simulation ne couvre autant de fonctions \u00e0 la fois. \u00c0 chaque ronde, les \u00e9tudiants prennent des d\u00e9cisions li\u00e9es en RH, marketing, production et finances." }
+};
+
+function whyText(top) {
+  const a = st.answers;
+  const acct = top === "accounting_cycle" || top === "financial_accounting";
+  const r = [];
+  if (a.discipline && WHY.discipline[a.discipline]) r.push(L(WHY.discipline[a.discipline]));
+  if (a.priority === "cross_functional" && top === "business") r.push(L(WHY.cross_biz));
+  if (a.priority === "sustainability" && top === "management") r.push(L(WHY.sustain_mgmt));
+  if (a.teamwork === "large_team" && top === "management") r.push(L(WHY.large_team_mgmt));
+  if (a.teamwork === "solo" && acct) r.push(L(WHY.solo_acct));
+  if (!r.length) r.push(t().fallbackWhy(L(S[top].name)));
+  return r.slice(0, 2).join(" ");
+}
+
+function salesIQTrigger(simName) {
+  // Replace the block below with your actual SalesIQ trigger once the script is loaded on your WordPress page:
+  // $zoho.salesiq.chat.start();
+  // $zoho.salesiq.visitor.info({ "simulation_interest": simName });
+  alert(t().siqAlert(simName));
+}
+
+function setLang(l) { LANG = l; document.documentElement.lang = l; render(); }
+
+function langToggle() {
+  return `<div class="plang">
+    <button class="${LANG === "fr" ? "on" : ""}" onclick="setLang('fr')">FR</button>
+    <button class="${LANG === "en" ? "on" : ""}" onclick="setLang('en')">EN</button>
+  </div>`;
+}
+
+function header(icon, title, sub, right) {
+  return `<div class="ph">
+    <div class="plm">${icon}</div>
+    <div class="pht"><div class="phtitle">${title}</div><div class="phsub">${sub}</div></div>
+    ${right || ""}
+    ${langToggle()}
+  </div>`;
+}
+
+const ICON = {
+  pen: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
+  check: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  clock: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+  star: `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  arrow: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`,
+  back: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>`,
+  ext: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`,
+  smallCheck: `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+};
+
+function render() {
+  const root = document.getElementById("qi");
+  const tx = t();
+
+  if (st.screen === "intro") {
+    root.innerHTML = `
+      ${header(ICON.pen, tx.appTitle, tx.appSub)}
+      <div class="ppt"><div class="ppf" style="width:0%"></div></div>
+      <div class="pb">
+        <div class="pi">
+          <div class="pib">${ICON.star} ${tx.badge(Q.length)}</div>
+          <div class="pit">${tx.introTitle}</div>
+          <div class="pis">${tx.introSub}</div>
+          <div class="psc">
+            ${Object.values(S).map(s => `<span class="pch">${L(s.short)}</span>`).join("")}
+          </div>
+          <button class="bst" onclick="startQ()">${tx.start} ${ICON.arrow}</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  if (st.screen === "result") {
+    const top = topResult();
+    const sim = S[top];
+    const alts = getAlts();
+    const topScore = st.scores[top];
+    root.innerHTML = `
+      ${header(ICON.check, tx.resTitle, tx.resSub(Q.length))}
+      <div class="ppt"><div class="ppf" style="width:100%"></div></div>
+      <div class="pb">
+        <div class="prh">
+          <div class="prl">${ICON.smallCheck} ${tx.bestMatch}</div>
+          <div class="prn">${L(sim.name)}</div>
+          <div class="prtl">${L(sim.tagline)}</div>
+          <div class="prwy">${whyText(top)}</div>
+          <div class="prtags">${L(sim.tags).map(x => `<span class="ptag">${x}</span>`).join("")}</div>
+          <div class="pra">
+            <a class="bcta" href="${L(sim.url)}" target="_blank">${tx.learnMore} ${ICON.ext}</a>
+            <button class="bol" onclick="salesIQTrigger('${top}')">${tx.demo} &rarr;</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:.625rem">
+          <div class="pat">${tx.others}</div>
+          <div class="pag">
+            ${alts.map(({ k, v }) => {
+              const ss = S[k];
+              const p = pct(v, topScore);
+              return `<a class="pac" href="${L(ss.url)}" target="_blank">
+                <div class="pan">${L(ss.short)}</div>
+                <div class="pas">${L(ss.tagline)}</div>
+                <div class="pabt"><div class="pabf" style="width:${p}%"></div></div>
+                <div class="pap">${tx.match(p)}</div>
+              </a>`;
+            }).join("")}
+          </div>
+        </div>
+
+        <div class="salesiq-note">${tx.siqNote}</div>
+
+        <div class="brs"><button class="brst" onclick="restart()">${tx.retake}</button></div>
+      </div>`;
+    return;
+  }
+
+  const q = Q[st.step];
+  const prog = (st.step / Q.length) * 100;
+  const sel = st.answers[q.id];
+  root.innerHTML = `
+    ${header(ICON.clock, tx.appTitle, tx.appSub, `<div class="psp">${st.step + 1} / ${Q.length}</div>`)}
+    <div class="ppt"><div class="ppf" style="width:${prog}%"></div></div>
+    <div class="pb">
+      <div class="pql">${tx.qOf(st.step + 1, Q.length)}</div>
+      <div class="pqt">${L(q.q)}</div>
+      <div class="pos">
+        ${q.opts.map(o => `
+          <button class="po${sel === o.v ? " sel" : ""}" onclick="pick('${q.id}','${o.v}')">
+            <div class="pr"></div>
+            <div>
+              <span class="pol">${L(o.l)}</span>
+              ${o.s ? `<span class="pos2">${L(o.s)}</span>` : ""}
+            </div>
+          </button>`).join("")}
+      </div>
+      <div class="pnav">
+        ${st.step > 0 ? `<button class="bbk" onclick="goBack()">${ICON.back} ${tx.back}</button>` : `<span></span>`}
+
+      </div>
+    </div>`;
+}
+
+function startQ() { st.screen = "quiz"; st.step = 0; render(); }
+
+function pick(qId, val) {
+  if (advancing) return;
+  const qq = Q.find(x => x.id === qId);
+  const prev = st.answers[qId];
+  if (prev) {
+    const prevOpt = qq.opts.find(o => o.v === prev);
+    if (prevOpt) Object.entries(prevOpt.sc).forEach(([k, v]) => { st.scores[k] -= v; });
+  }
+  const opt = qq.opts.find(o => o.v === val);
+  st.answers[qId] = val;
+  Object.entries(opt.sc).forEach(([k, v]) => { st.scores[k] += v; });
+  render();
+  // Auto-advance: short pause so the selection is visible, then next question (or result)
+  advancing = true;
+  setTimeout(() => { advancing = false; goNext(); }, 280);
+}
+let advancing = false;
+
+function goNext() {
+  if (st.step < Q.length - 1) { st.step++; render(); }
+  else { st.screen = "result"; render(); }
+}
+function goBack() { if (st.step > 0) { st.step--; render(); } }
+function restart() { st = { screen: "intro", step: 0, answers: {}, scores: EMPTY_SCORES() }; render(); }
+
+render();
+</script>
+
+</body>
+</html>
